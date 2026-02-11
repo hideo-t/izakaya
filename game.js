@@ -91,14 +91,22 @@ class IzakayaGame {
         // スプラッシュ表示
         this.showSplash();
         
-        // データ読み込み
+        // データ読み込み（エラーハンドリング付き）
         setTimeout(() => {
-            this.hideSplash();
-            this.setupUI();
-            this.setupEventListeners();
-            this.updateUI();
-            this.loadFromStorage();
-            this.initChart();
+            try {
+                this.hideSplash();
+                this.setupUI();
+                this.setupEventListeners();
+                this.updateUI();
+                this.loadFromStorage();
+                this.initChart();
+                console.log('✅ ゲーム初期化完了');
+            } catch (e) {
+                console.error('初期化エラー:', e);
+                // エラーが起きてもゲーム画面は表示
+                this.hideSplash();
+                alert('初期化中にエラーが発生しましたが、ゲームは続行できます。');
+            }
         }, 2000);
     }
     
@@ -142,27 +150,48 @@ class IzakayaGame {
         });
         
         // 1週間進める
-        document.getElementById('btn-next-week').addEventListener('click', () => this.advanceWeek());
+        const btnNextWeek = document.getElementById('btn-next-week');
+        if (btnNextWeek) {
+            btnNextWeek.addEventListener('click', () => this.advanceWeek());
+        }
         
         // 自動運転
-        document.getElementById('btn-auto').addEventListener('click', () => this.toggleAuto());
-        document.getElementById('footer-auto').addEventListener('click', () => this.toggleAuto());
+        const btnAuto = document.getElementById('btn-auto');
+        const footerAuto = document.getElementById('footer-auto');
+        if (btnAuto) btnAuto.addEventListener('click', () => this.toggleAuto());
+        if (footerAuto) footerAuto.addEventListener('click', () => this.toggleAuto());
         
         // ログクリア
-        document.getElementById('log-clear').addEventListener('click', () => this.clearLog());
+        const logClear = document.getElementById('log-clear');
+        if (logClear) {
+            logClear.addEventListener('click', () => this.clearLog());
+        }
         
         // メニュー開発
-        document.getElementById('btn-develop').addEventListener('click', () => this.developNewMenu());
+        const btnDevelop = document.getElementById('btn-develop');
+        if (btnDevelop) {
+            btnDevelop.addEventListener('click', () => this.developNewMenu());
+        }
         
         // SNS投稿
-        document.getElementById('btn-post').addEventListener('click', () => this.postToSNS());
+        const btnPost = document.getElementById('btn-post');
+        if (btnPost) {
+            btnPost.addEventListener('click', () => this.postToSNS());
+        }
         
         // 広告出稿
-        document.getElementById('btn-ad-submit').addEventListener('click', () => this.submitAd());
+        const btnAdSubmit = document.getElementById('btn-ad-submit');
+        if (btnAdSubmit) {
+            btnAdSubmit.addEventListener('click', () => this.submitAd());
+        }
         
         // セーブ/ロード
-        document.getElementById('footer-save').addEventListener('click', () => this.save());
-        document.getElementById('footer-load').addEventListener('click', () => this.load());
+        const footerSave = document.getElementById('footer-save');
+        const footerLoad = document.getElementById('footer-load');
+        if (footerSave) footerSave.addEventListener('click', () => this.save());
+        if (footerLoad) footerLoad.addEventListener('click', () => this.load());
+        
+        console.log('✅ イベントリスナー設定完了');
     }
     
     switchTab(tabName) {
@@ -513,37 +542,47 @@ class IzakayaGame {
         const ctx = document.getElementById('sales-chart');
         if (!ctx) return;
         
-        this.salesChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['4ヶ月前', '3ヶ月前', '2ヶ月前', '先月', '今月'],
-                datasets: [{
-                    label: '月商',
-                    data: this.salesHistory.slice(-5),
-                    borderColor: '#ff9800',
-                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+        // Chart.jsが読み込まれていない場合はスキップ
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js not loaded, skipping chart initialization');
+            return;
+        }
+        
+        try {
+            this.salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['4ヶ月前', '3ヶ月前', '2ヶ月前', '先月', '今月'],
+                    datasets: [{
+                        label: '月商',
+                        data: this.salesHistory.slice(-5),
+                        borderColor: '#ff9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#fff3e0' },
-                        grid: { color: 'rgba(255,255,255,0.1)' }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
                     },
-                    x: {
-                        ticks: { color: '#fff3e0' },
-                        grid: { display: false }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#fff3e0' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#fff3e0' },
+                            grid: { display: false }
+                        }
                     }
                 }
-            }
-        });
+            });
+        } catch (e) {
+            console.error('Chart initialization failed:', e);
+        }
     }
     
     updateChart() {
