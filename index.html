@@ -2,81 +2,312 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🍶 居酒屋ドリフター</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#e53935">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>🍶 居酒屋ドリフター 〜ダメ社長の経営革命〜</title>
+    <meta name="description" content="笑って、悩んで、気づく。本格派居酒屋経営シミュレーション">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="components.css">
 </head>
 <body>
-    <div class="game-container">
+    <!-- スプラッシュスクリーン -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <h1 class="splash-title">🍶 居酒屋ドリフター</h1>
+            <div class="splash-sub">〜ダメ社長の経営革命〜</div>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loading-progress"></div>
+            </div>
+            <div class="loading-text">データ読み込み中...</div>
+        </div>
+    </div>
+    
+    <!-- メインゲーム画面 -->
+    <div id="game-app" style="display: none;">
         <!-- ヘッダー -->
         <header class="game-header">
-            <div class="title">
-                <h1>🍶 居酒屋ドリフター</h1>
-                <div class="date">第 <span id="week">1</span>週 <span id="day">月</span>曜日</div>
+            <div class="header-left">
+                <button class="menu-toggle" id="menu-toggle">☰</button>
+                <div class="shop-name" id="shop-name">居酒屋 向日葵</div>
             </div>
-            <div class="cash">
-                💰 <span id="cash">500,000</span>円
+            <div class="header-center">
+                <div class="date-display">
+                    <span id="year">1</span>年目 
+                    <span id="month">4</span>月 
+                    <span id="week">1</span>週目
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="cash-display">
+                    <span class="cash-label">💰</span>
+                    <span id="cash" class="cash-value">500,000</span>
+                </div>
             </div>
         </header>
-
-        <!-- メインステータス -->
-        <section class="status-panel">
-            <div class="stat-card">
-                <div class="stat-label">今月の売上</div>
-                <div class="stat-value">¥<span id="monthly-sales">0</span></div>
+        
+        <!-- メインビュー -->
+        <main class="game-main">
+            <!-- タブナビゲーション -->
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="dashboard">📊</button>
+                <button class="tab-btn" data-tab="menu">🍽️</button>
+                <button class="tab-btn" data-tab="staff">👥</button>
+                <button class="tab-btn" data-tab="marketing">📱</button>
+                <button class="tab-btn" data-tab="analysis">📈</button>
+            </nav>
+            
+            <!-- タブコンテンツ -->
+            <div class="tab-contents">
+                <!-- ダッシュボード -->
+                <div id="dashboard" class="tab-pane active">
+                    <!-- 指標カード（スワイプ可能） -->
+                    <div class="metrics-carousel">
+                        <div class="metric-card">
+                            <div class="metric-label">月商</div>
+                            <div class="metric-value">¥<span id="monthly-sales">0</span></div>
+                            <div class="metric-trend" id="sales-trend">→</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">利益率</div>
+                            <div class="metric-value"><span id="profit-rate">0</span>%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">リピート率</div>
+                            <div class="metric-value"><span id="repeat-rate">20</span>%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">人気度</div>
+                            <div class="metric-value"><span id="popularity">30</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 社長メッセージ -->
+                    <div class="president-message" id="president-message">
+                        👨‍💼 「今日も頑張るぞ！」
+                    </div>
+                    
+                    <!-- クイックアクション -->
+                    <div class="quick-actions">
+                        <button class="action-btn primary" id="btn-next-week">
+                            ▶ 1週間進める
+                        </button>
+                        <button class="action-btn secondary" id="btn-auto">
+                            🤖 自動運転<span id="auto-status">OFF</span>
+                        </button>
+                    </div>
+                    
+                    <!-- 営業状況グラフ -->
+                    <div class="chart-container">
+                        <h3 class="section-title">📊 売上推移</h3>
+                        <canvas id="sales-chart" width="300" height="150"></canvas>
+                    </div>
+                    
+                    <!-- イベントログ -->
+                    <div class="event-log">
+                        <div class="log-header">
+                            <span>📋 経営日誌</span>
+                            <button class="log-clear" id="log-clear">🗑️</button>
+                        </div>
+                        <div class="log-messages" id="log-messages">
+                            <div class="log-entry">
+                                <span class="log-time">開始</span>
+                                <span class="log-text">🎉 居酒屋「向日葵」開業！頑張って経営しましょう！</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- メニュー管理タブ -->
+                <div id="menu" class="tab-pane">
+                    <div class="panel-header">
+                        <h2>🍽️ メニュー戦略</h2>
+                        <div class="cost-indicator">
+                            <span>平均原価率</span>
+                            <span class="cost-rate" id="avg-cost-rate">32%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 看板メニュー設定 -->
+                    <div class="specialty-section">
+                        <div class="section-title">🌟 看板メニュー</div>
+                        <div id="specialty-menu" class="specialty-card">
+                            <div class="menu-name">枝豆</div>
+                            <div class="menu-stats">原価率: 26.7% | 人気度: ★★★★☆</div>
+                        </div>
+                        <button class="btn-outline" id="btn-change-specialty">メニュー変更</button>
+                    </div>
+                    
+                    <!-- メニューリスト -->
+                    <div class="menu-list" id="menu-list"></div>
+                    
+                    <!-- メニュー開発 -->
+                    <div class="develop-section">
+                        <div class="section-title">🔬 新メニュー開発</div>
+                        <button class="btn-primary" id="btn-develop">開発する (¥50,000)</button>
+                    </div>
+                </div>
+                
+                <!-- スタッフ管理タブ -->
+                <div id="staff" class="tab-pane">
+                    <div class="panel-header">
+                        <h2>👥 スタッフ管理</h2>
+                        <div class="morale-indicator">
+                            <span>平均士気</span>
+                            <span class="morale-value" id="avg-morale">62%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- スタッフカード -->
+                    <div class="staff-list" id="staff-list"></div>
+                    
+                    <!-- シフト管理 -->
+                    <div class="shift-section">
+                        <div class="section-title">⏰ シフト設定</div>
+                        <div class="shift-control">
+                            <label>開店時間</label>
+                            <select id="open-time">
+                                <option value="16">16:00</option>
+                                <option value="17" selected>17:00</option>
+                                <option value="18">18:00</option>
+                            </select>
+                            <label>閉店時間</label>
+                            <select id="close-time">
+                                <option value="23">23:00</option>
+                                <option value="0" selected>0:00</option>
+                                <option value="1">1:00</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- マーケティングタブ -->
+                <div id="marketing" class="tab-pane">
+                    <div class="panel-header">
+                        <h2>📱 集客戦略</h2>
+                        <div class="sns-follower">
+                            <span>フォロワー</span>
+                            <span id="sns-follower">1,234</span>
+                        </div>
+                    </div>
+                    
+                    <!-- SNS投稿 -->
+                    <div class="sns-section">
+                        <div class="section-title">📸 SNS投稿</div>
+                        <div class="post-preview">
+                            <textarea id="post-text" placeholder="今日のオススメは..."></textarea>
+                        </div>
+                        <button class="btn-primary" id="btn-post">投稿する (無料)</button>
+                    </div>
+                    
+                    <!-- 広告設定 -->
+                    <div class="ad-section">
+                        <div class="section-title">📢 広告出稿</div>
+                        <div class="ad-options">
+                            <label class="ad-option">
+                                <input type="radio" name="ad" value="none" checked>
+                                <span>出稿しない</span>
+                            </label>
+                            <label class="ad-option">
+                                <input type="radio" name="ad" value="sns">
+                                <span>SNS広告 (¥30,000)</span>
+                            </label>
+                            <label class="ad-option">
+                                <input type="radio" name="ad" value="local">
+                                <span>地域情報誌 (¥100,000)</span>
+                            </label>
+                        </div>
+                        <button class="btn-primary" id="btn-ad-submit">広告を出稿</button>
+                    </div>
+                </div>
+                
+                <!-- 分析タブ -->
+                <div id="analysis" class="tab-pane">
+                    <div class="panel-header">
+                        <h2>📈 経営分析</h2>
+                        <div class="data-level">
+                            データ活用度: Lv.<span id="data-level">3</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 詳細指標 -->
+                    <div class="metrics-detail">
+                        <div class="metric-row">
+                            <span>FL比率</span>
+                            <span id="fl-ratio">65%</span>
+                            <span class="badge warning">要改善</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>客単価</span>
+                            <span id="customer-spend">¥2,800</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>回転率</span>
+                            <span id="turnover">1.2回</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>座席数</span>
+                            <span id="seats">30席</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 改善提案 -->
+                    <div class="advice-section">
+                        <div class="section-title">💡 コンサルタントからの提案</div>
+                        <div id="business-advice" class="advice-text">
+                            データを活用しましょう。まずは原価率の高いメニューから見直しを。
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">人気度</div>
-                <div class="stat-value"><span id="popularity">30</span>%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">スタッフ士気</div>
-                <div class="stat-value"><span id="morale">50</span>%</div>
-            </div>
-        </section>
-
-        <!-- アクションエリア -->
-        <section class="action-panel">
-            <h2>今日の行動</h2>
-            <div class="action-buttons">
-                <button class="btn-action" onclick="game.buyIngredients()">
-                    🛒 食材仕入れ<br>
-                    <small>-¥10,000</small>
-                </button>
-                <button class="btn-action" onclick="game.trainStaff()">
-                    📚 スタッフ研修<br>
-                    <small>-¥5,000</small>
-                </button>
-                <button class="btn-action" onclick="game.updateMenu()">
-                    📋 メニュー改善<br>
-                    <small>-¥3,000</small>
-                </button>
-                <button class="btn-action" onclick="game.restDay()">
-                    😴 今日は休業<br>
-                    <small>人件費のみ</small>
-                </button>
-            </div>
-            <button class="btn-next-day" onclick="game.nextDay()">
-                ▶️ 営業開始！
-            </button>
-        </section>
-
-        <!-- ログエリア -->
-        <section class="log-panel">
-            <h2>経営日誌</h2>
-            <div class="log-messages" id="log-messages">
-                <p class="log-welcome">🎉 居酒屋「ドリフター」開業！頑張って経営しましょう！</p>
-            </div>
-        </section>
-
-        <!-- フッター -->
+        </main>
+        
+        <!-- フッターメニュー -->
         <footer class="game-footer">
-            <button class="btn-footer" onclick="game.save()">💾 セーブ</button>
-            <button class="btn-footer" onclick="game.load()">📂 ロード</button>
-            <button class="btn-footer" onclick="game.reset()">🔄 リセット</button>
+            <div class="footer-actions">
+                <button class="footer-btn" id="footer-auto">
+                    <span class="icon">🤖</span>
+                    <span class="label">自動</span>
+                </button>
+                <button class="footer-btn" id="footer-calc">
+                    <span class="icon">🧮</span>
+                    <span class="label">電卓</span>
+                </button>
+                <button class="footer-btn" id="footer-save">
+                    <span class="icon">💾</span>
+                    <span class="label">保存</span>
+                </button>
+                <button class="footer-btn" id="footer-load">
+                    <span class="icon">📂</span>
+                    <span class="label">読込</span>
+                </button>
+                <button class="footer-btn" id="footer-setting">
+                    <span class="icon">⚙️</span>
+                    <span class="label">設定</span>
+                </button>
+            </div>
         </footer>
     </div>
-
+    
+    <!-- モーダルコンテナ -->
+    <div id="modal-container"></div>
+    
+    <!-- トースト通知 -->
+    <div id="toast-container"></div>
+    
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="game.js"></script>
+    <script src="auto-pilot.js"></script>
+    <script src="calculator.js"></script>
+    <script src="ui-manager.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
