@@ -1,305 +1,1139 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#e53935">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <title>🍶 居酒屋ドリフター 〜ダメ社長の経営革命〜 (簡易版)</title>
-    <meta name="description" content="笑って、悩んで、気づく。本格派居酒屋経営シミュレーション">
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="components.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#e53935">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>居酒屋ドリフター 〜ダメ社長の経営革命〜</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@400;700&display=swap');
+
+:root {
+  --primary:#e53935;--primary-dark:#b71c1c;
+  --secondary:#ff9800;--secondary-dark:#f57c00;
+  --accent:#ffab40;
+  --dark:#2c1a14;--dark-mid:#3e2723;--dark-light:#5d4037;
+  --light:#fff3e0;--gray:#efebe9;
+  --success:#66bb6a;--warning:#ffc107;--danger:#ef5350;--info:#42a5f5;
+  --header-h:52px;--footer-h:62px;--tab-h:48px;
+  --sab:env(safe-area-inset-bottom,0px);
+  --radius:14px;--radius-sm:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{
+  font-family:'Noto Sans JP','Zen Maru Gothic',sans-serif;
+  background:var(--dark);color:var(--light);
+  height:100%;overflow:hidden;position:relative;
+  line-height:1.55;font-size:14px;
+}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+input,select,textarea{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:rgba(255,152,0,.3);border-radius:2px}
+
+/* ===== SPLASH ===== */
+#splash{
+  position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse at 50% 30%,#4e342e,var(--dark));
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  transition:opacity .6s,transform .6s;
+}
+#splash.hide{opacity:0;pointer-events:none;transform:scale(1.05)}
+#splash h1{
+  font-family:'Zen Maru Gothic',cursive;font-size:2.2rem;
+  color:var(--secondary);text-shadow:0 0 30px rgba(255,152,0,.4);
+  margin-bottom:4px;
+}
+#splash .sub{color:rgba(255,243,224,.6);font-size:.9rem;margin-bottom:24px;letter-spacing:2px}
+.load-bar{width:200px;height:3px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
+.load-fill{height:100%;width:0;background:linear-gradient(90deg,var(--secondary),var(--accent));transition:width .3s}
+#splash .tip{color:rgba(255,255,255,.35);font-size:.72rem;margin-top:18px;max-width:260px;text-align:center}
+
+/* ===== APP WRAPPER ===== */
+#app{display:none;height:100%;flex-direction:column}
+#app.show{display:flex}
+
+/* ===== HEADER ===== */
+header{
+  height:var(--header-h);min-height:var(--header-h);
+  background:rgba(0,0,0,.92);backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 12px;border-bottom:2px solid var(--secondary);z-index:100;
+  position:relative;
+}
+header::after{
+  content:'';position:absolute;bottom:-2px;left:0;width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+}
+.h-left{display:flex;align-items:center;gap:8px}
+.shop-name{font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.h-center{text-align:center}
+.date-d{font-size:.75rem;color:var(--accent);font-weight:700;letter-spacing:1px}
+.cash-box{
+  background:rgba(255,152,0,.12);padding:4px 10px;border-radius:20px;
+  border:1px solid rgba(255,152,0,.35);font-weight:700;font-size:.82rem;
+  display:flex;align-items:center;gap:4px;
+}
+.cash-val{color:var(--accent)}
+
+/* ===== TABS ===== */
+.tabs{
+  display:flex;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(255,152,0,.15);z-index:90;min-height:var(--tab-h);
+}
+.tab-b{
+  flex:1;background:none;color:rgba(255,255,255,.45);
+  font-size:1.15rem;padding:6px 0 4px;position:relative;
+  transition:color .2s;display:flex;flex-direction:column;align-items:center;gap:1px;
+}
+.tab-b .tl{font-size:.6rem;letter-spacing:.5px}
+.tab-b.active{color:var(--secondary)}
+.tab-b.active::after{
+  content:'';position:absolute;bottom:0;left:20%;width:60%;height:2px;
+  background:var(--secondary);border-radius:1px;
+}
+
+/* ===== MAIN SCROLL ===== */
+.main-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 16px;-webkit-overflow-scrolling:touch}
+.pane{display:none}
+.pane.active{display:block;animation:fadeUp .25s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ===== CARDS ===== */
+.card{
+  background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.03));
+  border:1px solid rgba(255,152,0,.1);border-radius:var(--radius);
+  padding:14px;margin-bottom:10px;position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;width:4px;height:100%;
+  background:var(--secondary);border-radius:2px 0 0 2px;
+}
+.card-title{font-size:.7rem;color:rgba(255,255,255,.5);margin-bottom:2px;letter-spacing:1px}
+.card-val{font-size:1.5rem;font-weight:900;color:var(--accent)}
+.card-trend{font-size:.72rem;margin-top:2px}
+.trend-up{color:var(--success)}
+.trend-down{color:var(--danger)}
+
+/* METRICS ROW */
+.metrics{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.metrics .card{flex:0 0 calc(33.3% - 6px);min-width:115px;scroll-snap-align:start;padding:10px 12px}
+.metrics .card-val{font-size:1.2rem}
+
+/* PRESIDENT MSG */
+.pres-msg{
+  background:linear-gradient(135deg,rgba(93,64,55,.6),rgba(62,39,35,.8));
+  border:1px solid rgba(255,152,0,.25);border-radius:var(--radius);
+  padding:12px 14px;margin:10px 0;font-style:italic;font-size:.88rem;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.pres-face{font-size:1.6rem;flex-shrink:0}
+
+/* ACTION BTNS */
+.actions{display:flex;gap:8px;margin:12px 0}
+.btn-p,.btn-s,.btn-o{
+  flex:1;padding:13px 8px;border-radius:var(--radius);font-weight:700;font-size:.88rem;
+  transition:transform .1s,box-shadow .2s;text-align:center;
+}
+.btn-p:active,.btn-s:active,.btn-o:active{transform:scale(.97)}
+.btn-p{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 4px 16px rgba(229,57,53,.3)}
+.btn-s{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--secondary)}
+.btn-o{background:rgba(255,255,255,.05);color:var(--accent);border:1px solid rgba(255,152,0,.2)}
+.btn-sm{padding:8px 14px;border-radius:20px;font-size:.75rem;font-weight:700}
+.btn-p.btn-sm{font-size:.75rem}
+
+/* CHART */
+.chart-wrap{background:rgba(0,0,0,.2);border-radius:var(--radius);padding:12px;margin:10px 0}
+.chart-wrap canvas{width:100%!important;height:auto!important}
+
+/* LOG */
+.log-box{
+  background:rgba(0,0,0,.35);border-radius:var(--radius);margin-top:14px;overflow:hidden;
+}
+.log-hdr{
+  padding:8px 12px;background:rgba(0,0,0,.25);display:flex;justify-content:space-between;
+  align-items:center;font-size:.78rem;color:rgba(255,255,255,.6);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.log-body{padding:6px 12px;max-height:180px;overflow-y:auto}
+.log-e{
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:.78rem;display:flex;gap:8px;align-items:flex-start;
+}
+.log-t{color:var(--accent);font-size:.68rem;min-width:48px;flex-shrink:0}
+
+/* ===== MENU PANE ===== */
+.sec-title{font-size:.82rem;font-weight:700;color:var(--accent);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+.menu-item{
+  background:rgba(255,255,255,.06);border-radius:var(--radius-sm);
+  padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;
+}
+.mi-left{flex:1}
+.mi-name{font-weight:700;font-size:.88rem;display:flex;align-items:center;gap:4px}
+.mi-meta{font-size:.7rem;color:rgba(255,255,255,.5);margin-top:2px}
+.cost-badge{
+  display:inline-block;padding:1px 7px;border-radius:10px;font-size:.65rem;font-weight:700;
+}
+.cb-ok{background:rgba(102,187,106,.15);color:#a5d6a7}
+.cb-warn{background:rgba(255,193,7,.15);color:#ffe082}
+.cb-bad{background:rgba(239,83,80,.15);color:#ef9a9a}
+.mi-price{font-weight:700;font-size:1rem;color:var(--accent)}
+
+/* STAFF */
+.staff-card{
+  background:rgba(255,255,255,.06);border-radius:var(--radius);
+  padding:12px;margin-bottom:8px;display:flex;gap:12px;align-items:center;
+}
+.s-avatar{
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,var(--secondary),var(--accent));
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;
+}
+.s-info{flex:1}
+.s-name{font-weight:700;font-size:.92rem}
+.s-role{font-size:.7rem;color:rgba(255,255,255,.5)}
+.gauge{width:100%;height:5px;background:rgba(255,255,255,.12);border-radius:3px;margin-top:6px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:3px;transition:width .4s}
+.g-morale{background:linear-gradient(90deg,var(--success),#aed581)}
+.g-fatigue{background:linear-gradient(90deg,var(--warning),var(--danger))}
+.s-stats{display:flex;gap:12px;margin-top:4px;font-size:.68rem;color:rgba(255,255,255,.5)}
+
+/* MARKETING */
+.sns-post{
+  background:rgba(255,255,255,.06);border-radius:var(--radius);padding:12px;margin-bottom:10px;
+}
+.sns-post textarea{
+  width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,152,0,.2);
+  border-radius:var(--radius-sm);padding:10px;color:var(--light);font-size:.82rem;
+  resize:none;height:70px;
+}
+.ad-opt{
+  background:rgba(255,255,255,.05);border-radius:var(--radius-sm);
+  padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;
+  cursor:pointer;border:1px solid transparent;transition:border .2s;
+}
+.ad-opt.sel{border-color:var(--secondary);background:rgba(255,152,0,.08)}
+.ad-opt .price{margin-left:auto;color:var(--accent);font-weight:700;font-size:.82rem}
+
+/* ANALYSIS */
+.metric-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.85rem;
+}
+.mr-label{color:rgba(255,255,255,.6)}
+.mr-val{font-weight:700;color:var(--accent)}
+.badge{padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700;margin-left:6px}
+.badge-ok{background:rgba(102,187,106,.15);color:#a5d6a7}
+.badge-warn{background:rgba(255,193,7,.15);color:#ffe082}
+.badge-bad{background:rgba(239,83,80,.15);color:#ef9a9a}
+.advice-box{
+  background:linear-gradient(135deg,rgba(66,165,245,.1),rgba(66,165,245,.05));
+  border:1px solid rgba(66,165,245,.2);border-radius:var(--radius);
+  padding:12px;margin-top:12px;font-size:.82rem;line-height:1.7;
+}
+.advice-box::before{content:'💡 ';font-size:1rem}
+
+/* ===== FOOTER ===== */
+footer{
+  height:calc(var(--footer-h) + var(--sab));min-height:var(--footer-h);
+  background:rgba(0,0,0,.94);backdrop-filter:blur(12px);
+  border-top:1px solid rgba(255,152,0,.2);z-index:100;
+  padding-bottom:var(--sab);
+}
+.f-row{display:flex;height:var(--footer-h);align-items:center;justify-content:space-around}
+.f-btn{
+  background:none;color:rgba(255,255,255,.55);display:flex;flex-direction:column;
+  align-items:center;gap:2px;padding:4px 8px;font-size:.62rem;transition:color .2s;
+}
+.f-btn .fi{font-size:1.25rem}
+.f-btn:active{color:var(--secondary)}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn .2s;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{
+  background:linear-gradient(135deg,#4e342e,var(--dark-mid));
+  border:2px solid var(--secondary);border-radius:18px;
+  padding:24px 20px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);animation:modalPop .25s;
+}
+@keyframes modalPop{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
+.modal-box h2{font-size:1.1rem;margin-bottom:10px;color:var(--accent)}
+.modal-box p{font-size:.85rem;color:rgba(255,255,255,.8);margin-bottom:14px;line-height:1.7}
+.choice-btn{
+  display:block;width:100%;padding:12px;margin-bottom:8px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,152,0,.2);
+  border-radius:var(--radius-sm);color:var(--light);font-size:.85rem;
+  text-align:left;transition:all .2s;cursor:pointer;
+}
+.choice-btn:hover,.choice-btn:active{background:rgba(255,152,0,.15);border-color:var(--secondary)}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:calc(var(--footer-h) + var(--sab) + 12px);
+  left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.92);color:#fff;padding:10px 20px;
+  border-radius:24px;border-left:3px solid var(--secondary);
+  font-size:.8rem;z-index:2000;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);animation:toastIn .3s;
+  pointer-events:none;
+}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* AUTO INDICATOR */
+.auto-badge{
+  position:fixed;top:calc(var(--header-h) + 4px);right:8px;
+  background:rgba(102,187,106,.9);color:#1b5e20;
+  padding:3px 10px;border-radius:12px;font-size:.68rem;font-weight:700;
+  z-index:95;animation:pulse 2s infinite;display:none;
+}
+.auto-badge.on{display:block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* SPEED SELECT */
+.speed-row{display:flex;gap:6px;margin-top:8px}
+.speed-btn{
+  flex:1;padding:6px;border-radius:var(--radius-sm);font-size:.72rem;font-weight:700;
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid transparent;
+}
+.speed-btn.active{border-color:var(--secondary);color:var(--secondary);background:rgba(255,152,0,.1)}
+
+/* STRATEGY SELECT */
+.strat-row{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.strat-btn{
+  padding:6px 10px;border-radius:var(--radius-sm);font-size:.72rem;font-weight:700;
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid transparent;
+}
+.strat-btn.active{border-color:var(--secondary);color:var(--secondary);background:rgba(255,152,0,.1)}
+
+/* RESPONSIVE */
+@media(max-width:340px){
+  .metrics .card{flex:0 0 calc(50% - 4px);min-width:100px}
+  .shop-name{max-width:70px;font-size:.75rem}
+}
+@media(min-width:500px){
+  .main-scroll{max-width:480px;margin:0 auto}
+}
+
+/* ENDING */
+.ending-overlay{
+  position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  padding:30px;text-align:center;animation:fadeIn .5s;
+}
+.ending-overlay h1{font-size:1.6rem;color:var(--accent);margin-bottom:8px}
+.ending-overlay .rank{font-size:3rem;margin:10px 0}
+.ending-overlay p{font-size:.9rem;color:rgba(255,255,255,.7);line-height:1.8;max-width:320px}
+.ending-overlay button{margin-top:20px}
+</style>
 </head>
 <body>
-    <!-- スプラッシュスクリーン -->
-    <div id="splash-screen" class="splash-screen">
-        <div class="splash-content">
-            <h1 class="splash-title">🍶 居酒屋ドリフター</h1>
-            <div class="splash-sub">〜ダメ社長の経営革命〜 (簡易版)</div>
-            <div class="loading-bar">
-                <div class="loading-progress" id="loading-progress"></div>
-            </div>
-            <div class="loading-text">データ読み込み中...</div>
+
+<!-- SPLASH -->
+<div id="splash">
+  <h1>🍶 居酒屋ドリフター</h1>
+  <div class="sub">〜ダメ社長の経営革命〜</div>
+  <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
+  <div class="tip">笑って、悩んで、気づく。<br>本格派居酒屋経営シミュレーション</div>
+</div>
+
+<!-- AUTO BADGE -->
+<div class="auto-badge" id="autoBadge">🤖 自動運転中</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="h-left">
+      <div class="shop-name" id="shopName">居酒屋 向日葵</div>
+    </div>
+    <div class="h-center">
+      <div class="date-d" id="dateDisp">1年目 4月 1週</div>
+    </div>
+    <div class="cash-box">
+      <span>💰</span>
+      <span class="cash-val" id="cashDisp">500,000</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-b active" data-tab="dash"><span>📊</span><span class="tl">経営</span></button>
+    <button class="tab-b" data-tab="menu"><span>🍽️</span><span class="tl">メニュー</span></button>
+    <button class="tab-b" data-tab="staff"><span>👥</span><span class="tl">人材</span></button>
+    <button class="tab-b" data-tab="mkt"><span>📱</span><span class="tl">集客</span></button>
+    <button class="tab-b" data-tab="analysis"><span>📈</span><span class="tl">分析</span></button>
+  </nav>
+
+  <div class="main-scroll">
+    <!-- DASHBOARD -->
+    <div class="pane active" id="pane-dash">
+      <div class="metrics" id="metricsRow"></div>
+      <div class="pres-msg"><span class="pres-face">👨‍💼</span><span id="presMsg">「今日も頑張るぞ！…多分」</span></div>
+      <div class="actions">
+        <button class="btn-p" id="btnNext">▶ 1週間進める</button>
+        <button class="btn-s" id="btnAuto">🤖 自動OFF</button>
+      </div>
+      <div class="strat-row" id="stratRow" style="display:none">
+        <button class="strat-btn active" data-st="balanced">⚖️ バランス</button>
+        <button class="strat-btn" data-st="profit">💰 利益重視</button>
+        <button class="strat-btn" data-st="popularity">⭐ 人気重視</button>
+        <button class="strat-btn" data-st="growth">🚀 拡大重視</button>
+      </div>
+      <div class="speed-row" id="speedRow" style="display:none">
+        <button class="speed-btn" data-sp="slow">🐢 遅い</button>
+        <button class="speed-btn active" data-sp="normal">🐇 普通</button>
+        <button class="speed-btn" data-sp="fast">⚡ 高速</button>
+      </div>
+      <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
+      <div class="log-box">
+        <div class="log-hdr"><span>📋 経営日誌</span><button style="background:none;border:none;color:rgba(255,255,255,.4);font-size:.75rem;cursor:pointer" id="logClear">クリア</button></div>
+        <div class="log-body" id="logBody"></div>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div class="pane" id="pane-menu">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="sec-title">🍽️ メニュー管理</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.5)">平均原価率 <span style="color:var(--accent);font-weight:700" id="avgCostR">32%</span></div>
+      </div>
+      <div id="menuList"></div>
+      <div class="sec-title">🌟 新メニュー開発</div>
+      <div class="card" style="padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:.82rem">開発費</span>
+          <span style="color:var(--accent);font-weight:700">¥50,000</span>
         </div>
+        <button class="btn-p btn-sm" id="btnDev" style="width:100%">🔬 新メニューを開発する</button>
+      </div>
     </div>
-    
-    <!-- メインゲーム画面 -->
-    <div id="game-app" style="display: none;">
-        <!-- ヘッダー -->
-        <header class="game-header">
-            <div class="header-left">
-                <button class="menu-toggle" id="menu-toggle">☰</button>
-                <div class="shop-name" id="shop-name">居酒屋 向日葵</div>
-            </div>
-            <div class="header-center">
-                <div class="date-display">
-                    <span id="year">1</span>年目 
-                    <span id="month">4</span>月 
-                    <span id="week">1</span>週目
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="cash-display">
-                    <span class="cash-label">💰</span>
-                    <span id="cash" class="cash-value">500,000</span>
-                </div>
-            </div>
-        </header>
-        
-        <!-- メインビュー -->
-        <main class="game-main">
-            <!-- タブナビゲーション -->
-            <nav class="tab-nav">
-                <button class="tab-btn active" data-tab="dashboard">📊</button>
-                <button class="tab-btn" data-tab="menu">🍽️</button>
-                <button class="tab-btn" data-tab="staff">👥</button>
-                <button class="tab-btn" data-tab="marketing">📱</button>
-                <button class="tab-btn" data-tab="analysis">📈</button>
-            </nav>
-            
-            <!-- タブコンテンツ -->
-            <div class="tab-contents">
-                <!-- ダッシュボード -->
-                <div id="dashboard" class="tab-pane active">
-                    <!-- 指標カード（スワイプ可能） -->
-                    <div class="metrics-carousel">
-                        <div class="metric-card">
-                            <div class="metric-label">月商</div>
-                            <div class="metric-value">¥<span id="monthly-sales">0</span></div>
-                            <div class="metric-trend" id="sales-trend">→</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">利益率</div>
-                            <div class="metric-value"><span id="profit-rate">0</span>%</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">リピート率</div>
-                            <div class="metric-value"><span id="repeat-rate">20</span>%</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">人気度</div>
-                            <div class="metric-value"><span id="popularity">30</span></div>
-                        </div>
-                    </div>
-                    
-                    <!-- 社長メッセージ -->
-                    <div class="president-message" id="president-message">
-                        👨‍💼 「今日も頑張るぞ！」
-                    </div>
-                    
-                    <!-- クイックアクション -->
-                    <div class="quick-actions">
-                        <button class="action-btn primary" id="btn-next-week">
-                            ▶ 1週間進める
-                        </button>
-                        <button class="action-btn secondary" id="btn-auto">
-                            🤖 自動運転<span id="auto-status">OFF</span>
-                        </button>
-                    </div>
-                    
-                    <!-- グラフは非表示 -->
-                    
-                    <!-- イベントログ -->
-                    <div class="event-log">
-                        <div class="log-header">
-                            <span>📋 経営日誌</span>
-                            <button class="log-clear" id="log-clear">🗑️</button>
-                        </div>
-                        <div class="log-messages" id="log-messages">
-                            <div class="log-entry">
-                                <span class="log-time">開始</span>
-                                <span class="log-text">🎉 居酒屋「向日葵」開業！頑張って経営しましょう！</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- メニュー管理タブ -->
-                <div id="menu" class="tab-pane">
-                    <div class="panel-header">
-                        <h2>🍽️ メニュー戦略</h2>
-                        <div class="cost-indicator">
-                            <span>平均原価率</span>
-                            <span class="cost-rate" id="avg-cost-rate">32%</span>
-                        </div>
-                    </div>
-                    
-                    <!-- 看板メニュー設定 -->
-                    <div class="specialty-section">
-                        <div class="section-title">🌟 看板メニュー</div>
-                        <div id="specialty-menu" class="specialty-card">
-                            <div class="menu-name">枝豆</div>
-                            <div class="menu-stats">原価率: 26.7% | 人気度: ★★★★☆</div>
-                        </div>
-                        <button class="btn-outline" id="btn-change-specialty">メニュー変更</button>
-                    </div>
-                    
-                    <!-- メニューリスト -->
-                    <div class="menu-list" id="menu-list"></div>
-                    
-                    <!-- メニュー開発 -->
-                    <div class="develop-section">
-                        <div class="section-title">🔬 新メニュー開発</div>
-                        <button class="btn-primary" id="btn-develop">開発する (¥50,000)</button>
-                    </div>
-                </div>
-                
-                <!-- スタッフ管理タブ -->
-                <div id="staff" class="tab-pane">
-                    <div class="panel-header">
-                        <h2>👥 スタッフ管理</h2>
-                        <div class="morale-indicator">
-                            <span>平均士気</span>
-                            <span class="morale-value" id="avg-morale">62%</span>
-                        </div>
-                    </div>
-                    
-                    <!-- スタッフカード -->
-                    <div class="staff-list" id="staff-list"></div>
-                    
-                    <!-- シフト管理 -->
-                    <div class="shift-section">
-                        <div class="section-title">⏰ シフト設定</div>
-                        <div class="shift-control">
-                            <label>開店時間</label>
-                            <select id="open-time">
-                                <option value="16">16:00</option>
-                                <option value="17" selected>17:00</option>
-                                <option value="18">18:00</option>
-                            </select>
-                            <label>閉店時間</label>
-                            <select id="close-time">
-                                <option value="23">23:00</option>
-                                <option value="0" selected>0:00</option>
-                                <option value="1">1:00</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- マーケティングタブ -->
-                <div id="marketing" class="tab-pane">
-                    <div class="panel-header">
-                        <h2>📱 集客戦略</h2>
-                        <div class="sns-follower">
-                            <span>フォロワー</span>
-                            <span id="sns-follower">1,234</span>
-                        </div>
-                    </div>
-                    
-                    <!-- SNS投稿 -->
-                    <div class="sns-section">
-                        <div class="section-title">📸 SNS投稿</div>
-                        <div class="post-preview">
-                            <textarea id="post-text" placeholder="今日のオススメは..."></textarea>
-                        </div>
-                        <button class="btn-primary" id="btn-post">投稿する (無料)</button>
-                    </div>
-                    
-                    <!-- 広告設定 -->
-                    <div class="ad-section">
-                        <div class="section-title">📢 広告出稿</div>
-                        <div class="ad-options">
-                            <label class="ad-option">
-                                <input type="radio" name="ad" value="none" checked>
-                                <span>出稿しない</span>
-                            </label>
-                            <label class="ad-option">
-                                <input type="radio" name="ad" value="sns">
-                                <span>SNS広告 (¥30,000)</span>
-                            </label>
-                            <label class="ad-option">
-                                <input type="radio" name="ad" value="local">
-                                <span>地域情報誌 (¥100,000)</span>
-                            </label>
-                        </div>
-                        <button class="btn-primary" id="btn-ad-submit">広告を出稿</button>
-                    </div>
-                </div>
-                
-                <!-- 分析タブ -->
-                <div id="analysis" class="tab-pane">
-                    <div class="panel-header">
-                        <h2>📈 経営分析</h2>
-                        <div class="data-level">
-                            データ活用度: Lv.<span id="data-level">3</span>
-                        </div>
-                    </div>
-                    
-                    <!-- 詳細指標 -->
-                    <div class="metrics-detail">
-                        <div class="metric-row">
-                            <span>FL比率</span>
-                            <span id="fl-ratio">65%</span>
-                            <span class="badge warning">要改善</span>
-                        </div>
-                        <div class="metric-row">
-                            <span>客単価</span>
-                            <span id="customer-spend">¥2,800</span>
-                        </div>
-                        <div class="metric-row">
-                            <span>回転率</span>
-                            <span id="turnover">1.2回</span>
-                        </div>
-                        <div class="metric-row">
-                            <span>座席数</span>
-                            <span id="seats">30席</span>
-                        </div>
-                    </div>
-                    
-                    <!-- 改善提案 -->
-                    <div class="advice-section">
-                        <div class="section-title">💡 コンサルタントからの提案</div>
-                        <div id="business-advice" class="advice-text">
-                            データを活用しましょう。まずは原価率の高いメニューから見直しを。
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-        
-        <!-- フッターメニュー -->
-        <footer class="game-footer">
-            <div class="footer-actions">
-                <button class="footer-btn" id="footer-auto">
-                    <span class="icon">🤖</span>
-                    <span class="label">自動</span>
-                </button>
-                <button class="footer-btn" id="footer-calc">
-                    <span class="icon">🧮</span>
-                    <span class="label">電卓</span>
-                </button>
-                <button class="footer-btn" id="footer-save">
-                    <span class="icon">💾</span>
-                    <span class="label">保存</span>
-                </button>
-                <button class="footer-btn" id="footer-load">
-                    <span class="icon">📂</span>
-                    <span class="label">読込</span>
-                </button>
-                <button class="footer-btn" id="footer-setting">
-                    <span class="icon">⚙️</span>
-                    <span class="label">設定</span>
-                </button>
-            </div>
-        </footer>
+
+    <!-- STAFF -->
+    <div class="pane" id="pane-staff">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="sec-title">👥 スタッフ管理</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.5)">平均士気 <span style="color:var(--accent);font-weight:700" id="avgMorale">62%</span></div>
+      </div>
+      <div id="staffList"></div>
+      <div class="sec-title">📋 アクション</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn-o btn-sm" id="btnHire">👤 採用 ¥30,000</button>
+        <button class="btn-o btn-sm" id="btnParty">🎉 懇親会 ¥20,000</button>
+        <button class="btn-o btn-sm" id="btnTrain">📚 研修 ¥15,000</button>
+      </div>
     </div>
-    
-    <!-- モーダルコンテナ -->
-    <div id="modal-container"></div>
-    
-    <!-- トースト通知 -->
-    <div id="toast-container"></div>
-    
-    <!-- JavaScript (Chart.jsなし) -->
-    <script src="game.js" defer></script>
-    <script src="auto-pilot.js" defer></script>
-    <script src="calculator.js" defer></script>
-    <script src="ui-manager.js" defer></script>
-    <script src="main.js" defer></script>
+
+    <!-- MARKETING -->
+    <div class="pane" id="pane-mkt">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="sec-title">📱 集客戦略</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.5)">フォロワー <span style="color:var(--accent);font-weight:700" id="followers">1,234</span></div>
+      </div>
+      <div class="sns-post">
+        <textarea id="postText" placeholder="今日のオススメは...🍻"></textarea>
+        <button class="btn-p btn-sm" id="btnPost" style="margin-top:8px;width:100%">📤 SNS投稿する (無料)</button>
+      </div>
+      <div class="sec-title">📢 広告出稿</div>
+      <div id="adOpts"></div>
+    </div>
+
+    <!-- ANALYSIS -->
+    <div class="pane" id="pane-analysis">
+      <div class="sec-title">📈 経営分析</div>
+      <div id="analysisMetrics"></div>
+      <div class="sec-title">📊 売上推移</div>
+      <div class="chart-wrap"><canvas id="analysisChart"></canvas></div>
+      <div id="adviceBox" class="advice-box">データを活用しましょう。まずは原価率の高いメニューから見直しを。</div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="f-row">
+      <button class="f-btn" id="fCalc"><span class="fi">🧮</span>電卓</button>
+      <button class="f-btn" id="fSave"><span class="fi">💾</span>保存</button>
+      <button class="f-btn" id="fLoad"><span class="fi">📂</span>読込</button>
+      <button class="f-btn" id="fReset"><span class="fi">🔄</span>最初から</button>
+      <button class="f-btn" id="fInfo"><span class="fi">❓</span>遊び方</button>
+    </div>
+  </footer>
+</div>
+
+<!-- TOAST -->
+<div id="toastC"></div>
+<!-- MODAL -->
+<div id="modalC"></div>
+
+<script>
+// ============================================================
+// 居酒屋ドリフター - Full Game Engine
+// ============================================================
+
+// ---- GAME STATE ----
+const G = {
+  year:1, month:4, week:1, totalWeeks:0,
+  cash:500000, loan:0,
+  monthlySales:0, monthlyExpenses:0, monthlyProfit:0,
+  profitRate:0, flRatio:65,
+  popularity:30, repeatRate:20, customerAvg:2800,
+  turnoverRate:1.2, seats:30, dailyCustomers:45,
+  snsFollower:1234, snsEngagement:3.2, adLevel:'none',
+  reputation:65, dataUsage:10,
+  presidentLevel:1, presidentExp:0, awakened:false,
+  presidentStage:0, // 0=dame,1=kizuki,2=kaishin,3=kakusei
+  avgMorale:62, openTime:17, closeTime:0,
+  salesHistory:[],
+  autoMode:false, autoStrategy:'balanced', autoSpeed:'normal', autoTimer:null,
+  eventsDone:[], logs:[],
+  menu:[
+    {id:1,name:'枝豆',emoji:'🫛',cost:80,price:300,popularity:70},
+    {id:2,name:'刺身盛り',emoji:'🐟',cost:800,price:1800,popularity:85},
+    {id:3,name:'唐揚げ',emoji:'🍗',cost:120,price:450,popularity:75},
+    {id:4,name:'ポテトフライ',emoji:'🍟',cost:60,price:350,popularity:60},
+    {id:5,name:'焼き鳥',emoji:'🍢',cost:100,price:400,popularity:72},
+    {id:6,name:'生ビール',emoji:'🍺',cost:150,price:500,popularity:90},
+    {id:7,name:'ハイボール',emoji:'🥃',cost:80,price:450,popularity:80},
+    {id:8,name:'冷奴',emoji:'🧊',cost:40,price:280,popularity:55},
+  ],
+  staff:[
+    {id:1,name:'源さん',emoji:'👨‍🍳',role:'板前',morale:60,skill:80,fatigue:20,salary:250000},
+    {id:2,name:'みゆき',emoji:'👩‍🍳',role:'バイトリーダー',morale:70,skill:65,fatigue:30,salary:130000},
+    {id:3,name:'タケシ',emoji:'🧑‍🍳',role:'新人',morale:90,skill:30,fatigue:10,salary:100000},
+  ],
+  nextStaffId:4, nextMenuId:9,
+};
+
+// ---- CALC ----
+function costRate(c,p){return p>0?Math.round(c/p*100):0}
+function avgCostRate(){
+  if(!G.menu.length)return 0;
+  return Math.round(G.menu.reduce((s,m)=>s+costRate(m.cost,m.price),0)/G.menu.length);
+}
+function totalLabor(){return G.staff.reduce((s,m)=>s+m.salary,0)}
+function flRatio(){
+  const food=G.monthlySales*avgCostRate()/100;
+  const labor=totalLabor();
+  return G.monthlySales>0?Math.round((food+labor)/G.monthlySales*100):0;
+}
+function breakEven(){
+  const fixed=totalLabor()+200000; // rent+utilities
+  const varRate=avgCostRate()/100;
+  return varRate<1?Math.round(fixed/(1-varRate)):9999999;
+}
+function avgMorale(){
+  if(!G.staff.length)return 0;
+  return Math.round(G.staff.reduce((s,m)=>s+m.morale,0)/G.staff.length);
+}
+
+// ---- WEATHER & DAY ----
+const WEATHERS=['☀️ 晴れ','☁️ 曇り','🌧️ 雨','❄️ 雪'];
+const W_MULT=[1.2,1.0,0.7,0.5];
+function randomWeather(){
+  const m=G.month;
+  if(m>=6&&m<=7)return Math.random()<.4?2:Math.random()<.5?1:0;
+  if(m==1||m==2)return Math.random()<.15?3:Math.random()<.3?1:0;
+  return Math.random()<.2?2:Math.random()<.4?1:0;
+}
+
+// ---- CUSTOMER SIM ----
+function simWeek(){
+  const weather=randomWeather();
+  const wMult=W_MULT[weather];
+  const popMult=0.5+G.popularity/100;
+  const staffMult=0.7+avgMorale()/300;
+  const base=G.dailyCustomers*7;
+  const customers=Math.floor(base*wMult*popMult*staffMult*(0.9+Math.random()*0.2));
+  const avgSpend=G.customerAvg*(0.9+Math.random()*0.2);
+  const weekSales=Math.floor(customers*avgSpend);
+
+  G.monthlySales+=weekSales;
+  const weekExpense=Math.floor(weekSales*avgCostRate()/100+totalLabor()/4+50000);
+  G.monthlyExpenses+=weekExpense;
+  const weekProfit=weekSales-weekExpense;
+  G.cash+=weekProfit;
+
+  // Update dynamics
+  G.staff.forEach(s=>{
+    s.fatigue=Math.min(100,s.fatigue+Math.floor(5+Math.random()*5));
+    if(s.fatigue>70)s.morale=Math.max(0,s.morale-3);
+  });
+  G.avgMorale=avgMorale();
+
+  // Popularity drift
+  const qualFactor=G.staff.reduce((s,m)=>s+m.skill,0)/G.staff.length/100;
+  if(Math.random()<.3)G.popularity=Math.max(0,Math.min(100,G.popularity+Math.floor((qualFactor-0.5)*5+(Math.random()-0.5)*4)));
+
+  // SNS organic growth
+  if(Math.random()<.2)G.snsFollower+=Math.floor(Math.random()*20*popMult);
+
+  // Repeat rate
+  G.repeatRate=Math.min(80,Math.max(5,Math.floor(G.popularity*0.6+G.avgMorale*0.2)));
+  G.customerAvg=Math.floor(G.menu.reduce((s,m)=>s+m.price*m.popularity/100,0)/Math.max(1,G.menu.length)*1.8);
+
+  return {customers,weekSales,weekProfit,weather:WEATHERS[weather]};
+}
+
+// ---- MONTH SETTLE ----
+function settleMonth(){
+  G.monthlyProfit=G.monthlySales-G.monthlyExpenses;
+  G.profitRate=G.monthlySales>0?Math.round(G.monthlyProfit/G.monthlySales*100):0;
+  G.flRatio=flRatio();
+  G.salesHistory.push(G.monthlySales);
+  if(G.salesHistory.length>12)G.salesHistory.shift();
+  G.monthlySales=0;G.monthlyExpenses=0;
+  // Loan interest
+  if(G.loan>0){const interest=Math.floor(G.loan*0.02);G.cash-=interest;G.loan=Math.max(0,G.loan-Math.floor(G.loan*0.05))}
+  // President exp
+  G.presidentExp+=10;
+  if(G.presidentExp>=G.presidentLevel*50){G.presidentLevel++;G.presidentExp=0;}
+}
+
+// ---- ADVANCE WEEK ----
+function advanceWeek(){
+  G.totalWeeks++;G.week++;
+  let monthEnd=false;
+  if(G.week>4){G.week=1;G.month++;monthEnd=true;if(G.month>12){G.month=1;G.year++;}}
+  const res=simWeek();
+  if(monthEnd)settleMonth();
+  addLog(`${res.weather} 客${res.customers}人 売上¥${fmt(res.weekSales)} ${res.weekProfit>=0?'📈':'📉'}${res.weekProfit>=0?'+':''}¥${fmt(res.weekProfit)}`);
+  checkEvents();
+  checkEndings();
+  updateAll();
+  return res;
+}
+
+// ---- EVENTS ----
+const EVENTS=[
+  {id:'e1',title:'銀行からの電話',cond:()=>G.totalWeeks>=2&&G.cash<400000,desc:'「山田社長、先月の返済が…」銀行員・中村からの電話。',
+    choices:[
+      {text:'「何とかします！」（気合で乗り切る）',fn:()=>{G.cash-=30000;addLog('💸 借金の穴を別の借金で…');toast('資金が減った…')}},
+      {text:'「原価率を見直します」（電卓を手に取る）',fn:()=>{G.dataUsage+=20;G.presidentStage=Math.max(G.presidentStage,1);addLog('📊 初めて原価計算表を作成した！');toast('💡 気づきを得た！')}}
+    ]},
+  {id:'e2',title:'原価率60%の刺身盛り',cond:()=>G.totalWeeks>=4&&G.menu.find(m=>m.name==='刺身盛り'&&costRate(m.cost,m.price)>40),
+    desc:'看板メニューの刺身盛り…原価率が高すぎないか？',
+    choices:[
+      {text:'「高級路線で勝負だ！」（変更しない）',fn:()=>{G.popularity+=3;addLog('🐟 刺身盛りを据え置き')}},
+      {text:'「適正価格に見直そう」',fn:()=>{const m=G.menu.find(x=>x.name==='刺身盛り');if(m)m.price=2200;G.dataUsage+=10;addLog('💰 刺身盛りの価格を適正化');toast('原価率改善！')}}
+    ]},
+  {id:'e3',title:'スタッフからの不満',cond:()=>G.avgMorale<45,desc:'みゆきが「最近みんな疲れてます…」とこぼした。',
+    choices:[
+      {text:'「仕方ない、頑張れ」',fn:()=>{G.staff.forEach(s=>s.morale=Math.max(0,s.morale-10));addLog('😔 士気がさらに低下…')}},
+      {text:'「みんなで話し合おう」',fn:()=>{G.cash-=10000;G.staff.forEach(s=>{s.morale=Math.min(100,s.morale+15);s.fatigue=Math.max(0,s.fatigue-10)});addLog('💬 全体ミーティングで改善');toast('士気回復！')}}
+    ]},
+  {id:'e4',title:'常連の田中さん',cond:()=>G.totalWeeks>=6&&G.repeatRate>30,desc:'「マスター、最近美味くなったな！」常連の田中さんが笑った。',
+    choices:[
+      {text:'「田中さん、いつもありがとう！」',fn:()=>{G.popularity+=5;G.repeatRate+=3;addLog('🍻 常連客の評価が上がった！');toast('リピート率UP！')}}
+    ]},
+  {id:'e5',title:'食材の値上げ',cond:()=>G.totalWeeks>=8&&!G.eventsDone.includes('e5'),desc:'仕入れ先から連絡。主要食材が15%値上がりする。',
+    choices:[
+      {text:'「仕方ない…そのまま仕入れる」',fn:()=>{G.menu.forEach(m=>m.cost=Math.floor(m.cost*1.15));addLog('📈 食材コストが上昇…')}},
+      {text:'「別の仕入れ先を探す」',fn:()=>{G.cash-=20000;G.menu.forEach(m=>m.cost=Math.floor(m.cost*1.05));G.dataUsage+=5;addLog('🔍 新しい仕入れ先を開拓');toast('コスト上昇を抑えた！')}}
+    ]},
+  {id:'e6',title:'社長、改心す',cond:()=>G.presidentStage>=1&&G.dataUsage>40&&G.profitRate>5,
+    desc:'「儲かるって、カッコ悪くないんだ…」初めて黒字を見た社長の目に光が宿った。',
+    choices:[
+      {text:'「経営を学ぼう」',fn:()=>{G.presidentStage=2;G.awakened=true;G.cash+=50000;addLog('🌟 社長が改心した！経営哲学が変わる');toast('🎉 社長覚醒！')}}
+    ]},
+  {id:'e7',title:'ライバル店出現',cond:()=>G.totalWeeks>=12,desc:'駅前に新しい居酒屋がオープン。客足に影響が出そうだ。',
+    choices:[
+      {text:'「うちはうちだ」（何もしない）',fn:()=>{G.popularity=Math.max(0,G.popularity-8);addLog('😰 ライバル店に客が流れた…')}},
+      {text:'「看板メニューを強化する！」',fn:()=>{G.cash-=30000;G.popularity+=5;G.menu.forEach(m=>{if(m.popularity>70)m.popularity=Math.min(100,m.popularity+5)});addLog('💪 メニュー強化で対抗！');toast('看板メニュー強化！')}}
+    ]},
+  {id:'e8',title:'TV取材のチャンス',cond:()=>G.popularity>=60&&G.totalWeeks>=16,desc:'地元テレビ局から取材依頼が！これはチャンスだ。',
+    choices:[
+      {text:'「ぜひお願いします！」',fn:()=>{G.snsFollower+=500;G.popularity=Math.min(100,G.popularity+15);G.dailyCustomers=Math.floor(G.dailyCustomers*1.3);addLog('📺 TV取材で知名度爆上がり！');toast('🎉 テレビ効果！')}},
+      {text:'「今はまだ早い…」',fn:()=>{addLog('📺 TV取材を断った');toast('チャンスを逃した…')}}
+    ]},
+];
+
+function checkEvents(){
+  EVENTS.forEach(ev=>{
+    if(!G.eventsDone.includes(ev.id)&&ev.cond()){
+      G.eventsDone.push(ev.id);
+      showEvent(ev);
+    }
+  });
+}
+
+// ---- ENDINGS ----
+function checkEndings(){
+  if(G.cash<=0){showEnding('💀','倒産エンド','資金がゼロに…「すまん、みんな…」山田社長は深く頭を下げた。しかし、この経験は無駄にはならない。');return}
+  if(G.year>=3&&G.profitRate>20&&G.popularity>70){showEnding('🏆','繁盛店エンド','3年目にして繁盛店に！「数字を見るのが怖くなくなった」と社長は笑った。');return}
+  if(G.year>=3&&G.presidentStage>=2&&G.profitRate>10){showEnding('🌟','改心エンド','ダメ社長が変わった。数字と向き合い、スタッフを信じ、お客様に愛される店に。');return}
+  if(G.year>=5){showEnding('📖','5年目エンド','5年間の経営お疲れ様でした。山田社長の居酒屋は今日も灯りが点いている。');}
+}
+
+// ---- AUTO PILOT ----
+function toggleAuto(){
+  G.autoMode=!G.autoMode;
+  if(G.autoMode){
+    startAuto();
+    addLog('🤖 自動運転モード開始');
+  }else{
+    stopAuto();
+    addLog('🛑 自動運転モード終了');
+  }
+  updateAll();
+}
+function startAuto(){
+  stopAuto();
+  const speeds={slow:2500,normal:1200,fast:400};
+  G.autoTimer=setInterval(()=>{
+    if(!G.autoMode)return stopAuto();
+    autoDecision();
+    advanceWeek();
+  },speeds[G.autoSpeed]||1200);
+}
+function stopAuto(){
+  if(G.autoTimer){clearInterval(G.autoTimer);G.autoTimer=null}
+}
+function autoDecision(){
+  const st=G.autoStrategy;
+  // Price optimization
+  if(st==='profit'||st==='balanced'){
+    G.menu.forEach(m=>{
+      const cr=costRate(m.cost,m.price);
+      if(cr>35)m.price=Math.floor(m.price*1.05);
+    });
+  }
+  // Staff care
+  if(st==='popularity'||st==='balanced'){
+    G.staff.forEach(s=>{
+      if(s.fatigue>60){s.fatigue=Math.max(0,s.fatigue-15);s.morale=Math.min(100,s.morale+5)}
+    });
+  }
+  // Advertising
+  if(st==='growth'&&G.popularity<50&&G.cash>200000){
+    G.cash-=30000;G.popularity=Math.min(100,G.popularity+3);G.snsFollower+=Math.floor(Math.random()*50);
+  }
+  // Loan if broke
+  if(G.cash<200000&&G.loan===0){G.loan=500000;G.cash+=500000;addLog('🏦 自動融資を実行')}
+}
+
+// ---- UI HELPERS ----
+function fmt(n){return Math.abs(n).toLocaleString('ja-JP')}
+function $(id){return document.getElementById(id)}
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  $('toastC').appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+function addLog(msg){
+  const w=`${G.year}年${G.month}月${G.week}週`;
+  G.logs.unshift({t:w,m:msg});
+  if(G.logs.length>50)G.logs.pop();
+}
+
+// ---- EVENT MODAL ----
+function showEvent(ev){
+  if(G.autoMode&&Math.random()<0.6)return; // auto skips some events
+  const overlay=document.createElement('div');overlay.className='modal-overlay';
+  overlay.innerHTML=`<div class="modal-box">
+    <h2>📖 ${ev.title}</h2>
+    <p>${ev.desc}</p>
+    <div>${ev.choices.map((c,i)=>`<button class="choice-btn" data-i="${i}">${c.text}</button>`).join('')}</div>
+  </div>`;
+  $('modalC').appendChild(overlay);
+  overlay.querySelectorAll('.choice-btn').forEach(btn=>{
+    btn.onclick=()=>{ev.choices[+btn.dataset.i].fn();overlay.remove();updateAll()};
+  });
+}
+
+// ---- ENDING ----
+function showEnding(icon,title,desc){
+  stopAuto();G.autoMode=false;
+  const ov=document.createElement('div');ov.className='ending-overlay';
+  ov.innerHTML=`<div class="rank">${icon}</div><h1>${title}</h1><p>${desc}</p>
+  <p style="margin-top:12px;font-size:.75rem;color:rgba(255,255,255,.5)">
+  最終成績：月商¥${fmt(G.salesHistory.length?G.salesHistory[G.salesHistory.length-1]:0)} / 人気度${G.popularity} / 社長Lv.${G.presidentLevel}</p>
+  <button class="btn-p" style="margin-top:16px;padding:12px 30px" onclick="this.parentElement.remove();resetGame()">🔄 もう一度プレイ</button>`;
+  document.body.appendChild(ov);
+}
+
+// ---- RENDER ----
+function updateAll(){
+  // Header
+  $('dateDisp').textContent=`${G.year}年目 ${G.month}月 ${G.week}週`;
+  $('cashDisp').textContent=fmt(G.cash);
+  if(G.cash<100000)$('cashDisp').style.color='#ef9a9a';
+  else if(G.cash<300000)$('cashDisp').style.color='#ffe082';
+  else $('cashDisp').style.color='';
+
+  // Metrics
+  $('metricsRow').innerHTML=[
+    {l:'月商',v:'¥'+fmt(G.monthlySales),c:G.monthlySales>0},
+    {l:'利益率',v:G.profitRate+'%',c:G.profitRate>0},
+    {l:'人気度',v:G.popularity,c:G.popularity>50},
+    {l:'リピート率',v:G.repeatRate+'%',c:G.repeatRate>30},
+    {l:'客単価',v:'¥'+fmt(G.customerAvg),c:true},
+  ].map(m=>`<div class="card"><div class="card-title">${m.l}</div><div class="card-val">${m.v}</div></div>`).join('');
+
+  // President msg
+  const msgs=G.presidentStage===0?
+    ['「数字？そんなの見なくても！」','「まあ何とかなるさ…多分」','「お客さんが来れば儲かる…よな？」']:
+    G.presidentStage===1?
+    ['「原価率ってこういうことか…」','「電卓って便利だな」','「もっと勉強しないと」']:
+    G.presidentStage>=2?
+    ['「数字の裏に人がいる」','「スタッフあっての店だ」','「経営って面白いな！」']:
+    ['「今日も頑張るぞ！」'];
+  $('presMsg').textContent=msgs[Math.floor(Math.random()*msgs.length)];
+
+  // Auto btn
+  $('btnAuto').textContent=G.autoMode?'🤖 自動ON':'🤖 自動OFF';
+  $('btnAuto').className=G.autoMode?'btn-p':'btn-s';
+  $('autoBadge').className='auto-badge'+(G.autoMode?' on':'');
+  $('stratRow').style.display=G.autoMode?'flex':'none';
+  $('speedRow').style.display=G.autoMode?'flex':'none';
+
+  // Logs
+  $('logBody').innerHTML=G.logs.slice(0,20).map(l=>`<div class="log-e"><span class="log-t">${l.t}</span><span>${l.m}</span></div>`).join('');
+
+  // Menu tab
+  $('avgCostR').textContent=avgCostRate()+'%';
+  $('menuList').innerHTML=G.menu.map(m=>{
+    const cr=costRate(m.cost,m.price);
+    const cls=cr<=30?'cb-ok':cr<=40?'cb-warn':'cb-bad';
+    return `<div class="menu-item">
+      <div class="mi-left">
+        <div class="mi-name">${m.emoji} ${m.name} ${'⭐'.repeat(Math.floor(m.popularity/25))}</div>
+        <div class="mi-meta">原価¥${m.cost} <span class="cost-badge ${cls}">原価率${cr}%</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="mi-price">¥${fmt(m.price)}</div>
+        <button class="btn-o btn-sm" onclick="editMenu(${m.id})">✏️</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Staff tab
+  $('avgMorale').textContent=avgMorale()+'%';
+  $('staffList').innerHTML=G.staff.map(s=>`<div class="staff-card">
+    <div class="s-avatar">${s.emoji}</div>
+    <div class="s-info">
+      <div class="s-name">${s.name}</div>
+      <div class="s-role">${s.role} / スキル${s.skill} / 月給¥${fmt(s.salary)}</div>
+      <div class="s-stats"><span>士気</span></div>
+      <div class="gauge"><div class="gauge-fill g-morale" style="width:${s.morale}%"></div></div>
+      <div class="s-stats"><span>疲労</span></div>
+      <div class="gauge"><div class="gauge-fill g-fatigue" style="width:${s.fatigue}%"></div></div>
+    </div>
+    <button class="btn-o btn-sm" onclick="restStaff(${s.id})">😴休</button>
+  </div>`).join('');
+
+  // Marketing
+  $('followers').textContent=fmt(G.snsFollower);
+  const adOptions=[
+    {id:'none',label:'広告なし',price:0},
+    {id:'sns',label:'SNS広告',price:30000},
+    {id:'local',label:'地域情報誌',price:100000},
+    {id:'tv',label:'TVスポット',price:300000},
+  ];
+  $('adOpts').innerHTML=adOptions.map(a=>`<div class="ad-opt${G.adLevel===a.id?' sel':''}" onclick="setAd('${a.id}',${a.price})">
+    <span>${a.label}</span><span class="price">${a.price?'¥'+fmt(a.price):'無料'}</span>
+  </div>`).join('');
+
+  // Analysis
+  const fl=flRatio();const be=breakEven();
+  const analysisData=[
+    {l:'FL比率',v:fl+'%',b:fl<=55?'badge-ok':fl<=65?'badge-warn':'badge-bad',bl:fl<=55?'良好':fl<=65?'要注意':'危険'},
+    {l:'原価率',v:avgCostRate()+'%',b:avgCostRate()<=30?'badge-ok':avgCostRate()<=38?'badge-warn':'badge-bad',bl:avgCostRate()<=30?'良好':'要改善'},
+    {l:'客単価',v:'¥'+fmt(G.customerAvg)},
+    {l:'回転率',v:G.turnoverRate.toFixed(1)+'回'},
+    {l:'座席数',v:G.seats+'席'},
+    {l:'損益分岐点',v:'¥'+fmt(be)+'/月'},
+    {l:'借入残高',v:'¥'+fmt(G.loan)},
+    {l:'社長レベル',v:'Lv.'+G.presidentLevel},
+    {l:'データ活用度',v:G.dataUsage},
+  ];
+  $('analysisMetrics').innerHTML=analysisData.map(d=>`<div class="metric-row">
+    <span class="mr-label">${d.l}</span>
+    <span><span class="mr-val">${d.v}</span>${d.b?`<span class="badge ${d.b}">${d.bl}</span>`:''}</span>
+  </div>`).join('');
+
+  // Advice
+  const advices=[];
+  if(avgCostRate()>35)advices.push('原価率が高めです。メニュー価格の見直しを検討しましょう。');
+  if(fl>65)advices.push('FL比率が高いです。人件費か食材費を最適化しましょう。');
+  if(G.avgMorale<40)advices.push('スタッフの士気が低下しています。懇親会や休暇を検討してください。');
+  if(G.popularity<30)advices.push('人気度が低いです。SNS投稿や広告で認知度を上げましょう。');
+  if(G.cash<200000)advices.push('⚠️ 資金が危険水準です！支出を抑えるか融資を検討しましょう。');
+  if(!advices.length)advices.push('順調な経営です！この調子で頑張りましょう。');
+  $('adviceBox').textContent=advices.join(' ');
+
+  drawCharts();
+}
+
+// ---- CHARTS ----
+let salesChartInst=null,analysisChartInst=null;
+function drawCharts(){
+  const labels=G.salesHistory.map((_,i)=>(i+1)+'月');
+  const data=G.salesHistory;
+  // Sales chart
+  const ctx1=$('salesChart');
+  if(salesChartInst)salesChartInst.destroy();
+  if(ctx1&&data.length>0){
+    salesChartInst=new Chart(ctx1,{type:'line',data:{labels,datasets:[{
+      label:'月商',data,borderColor:'#ff9800',backgroundColor:'rgba(255,152,0,.15)',
+      fill:true,tension:.3,borderWidth:2,pointRadius:3,pointBackgroundColor:'#ffab40'
+    }]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:'rgba(255,255,255,.4)',font:{size:10}},grid:{display:false}},
+    y:{ticks:{color:'rgba(255,255,255,.4)',font:{size:10},callback:v=>'¥'+Math.round(v/10000)+'万'},grid:{color:'rgba(255,255,255,.06)'}}}}});
+  }
+  // Analysis chart
+  const ctx2=$('analysisChart');
+  if(analysisChartInst)analysisChartInst.destroy();
+  if(ctx2&&data.length>0){
+    analysisChartInst=new Chart(ctx2,{type:'bar',data:{labels,datasets:[{
+      label:'月商',data,backgroundColor:'rgba(255,152,0,.4)',borderColor:'#ff9800',borderWidth:1,borderRadius:4
+    }]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:'rgba(255,255,255,.4)',font:{size:10}},grid:{display:false}},
+    y:{ticks:{color:'rgba(255,255,255,.4)',font:{size:10},callback:v=>'¥'+Math.round(v/10000)+'万'},grid:{color:'rgba(255,255,255,.06)'}}}}});
+  }
+}
+
+// ---- ACTIONS ----
+function editMenu(id){
+  const m=G.menu.find(x=>x.id===id);if(!m)return;
+  const ov=document.createElement('div');ov.className='modal-overlay';
+  ov.innerHTML=`<div class="modal-box">
+    <h2>${m.emoji} ${m.name}</h2>
+    <p>原価: ¥${m.cost} / 現在価格: ¥${m.price} / 原価率: ${costRate(m.cost,m.price)}%</p>
+    <div style="margin:12px 0">
+      <label style="font-size:.8rem;color:rgba(255,255,255,.6)">販売価格</label>
+      <input type="range" id="priceSlider" min="${m.cost+50}" max="${m.cost*5}" step="50" value="${m.price}" style="width:100%;accent-color:var(--secondary)">
+      <div style="text-align:center;font-size:1.2rem;font-weight:700;color:var(--accent)" id="priceLabel">¥${m.price}</div>
+      <div style="text-align:center;font-size:.75rem;color:rgba(255,255,255,.5)" id="crLabel">原価率: ${costRate(m.cost,m.price)}%</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-p btn-sm" style="flex:1" id="priceOk">決定</button>
+      <button class="btn-o btn-sm" style="flex:1" onclick="this.closest('.modal-overlay').remove()">キャンセル</button>
+    </div>
+  </div>`;
+  $('modalC').appendChild(ov);
+  const slider=ov.querySelector('#priceSlider');
+  slider.oninput=()=>{
+    ov.querySelector('#priceLabel').textContent='¥'+fmt(+slider.value);
+    ov.querySelector('#crLabel').textContent='原価率: '+costRate(m.cost,+slider.value)+'%';
+  };
+  ov.querySelector('#priceOk').onclick=()=>{m.price=+slider.value;ov.remove();updateAll();toast(`${m.name}の価格を¥${fmt(m.price)}に変更`);addLog(`💰 ${m.name}を¥${fmt(m.price)}に変更 (原価率${costRate(m.cost,m.price)}%)`)};
+}
+
+function restStaff(id){
+  const s=G.staff.find(x=>x.id===id);if(!s)return;
+  s.fatigue=Math.max(0,s.fatigue-30);s.morale=Math.min(100,s.morale+10);
+  toast(`${s.name}を休ませた`);addLog(`😴 ${s.name}に休暇を与えた`);updateAll();
+}
+
+function setAd(level,price){
+  if(price>G.cash){toast('資金が足りません');return}
+  if(G.adLevel!=='none'&&level!=='none'){toast('既に広告実施中です');return}
+  G.adLevel=level;
+  if(price>0){
+    G.cash-=price;
+    const boost={sns:5,local:12,tv:25};
+    G.popularity=Math.min(100,G.popularity+(boost[level]||0));
+    G.snsFollower+=Math.floor(price/100*(1+Math.random()));
+    addLog(`📢 ${level==='sns'?'SNS広告':level==='local'?'地域情報誌':'TVスポット'}を出稿 (¥${fmt(price)})`);
+    toast('広告を出稿しました！');
+  }
+  updateAll();
+}
+
+// Dev new menu
+$('btnDev').onclick=()=>{
+  if(G.cash<50000){toast('資金が足りません(¥50,000必要)');return}
+  G.cash-=50000;
+  const names=[
+    {name:'明太子もつ鍋',emoji:'🍲',cost:300,price:980,pop:65},
+    {name:'自家製チャーシュー',emoji:'🥩',cost:200,price:680,pop:70},
+    {name:'アボカドサラダ',emoji:'🥑',cost:150,price:580,pop:60},
+    {name:'海老マヨ',emoji:'🦐',cost:250,price:780,pop:72},
+    {name:'だし巻き玉子',emoji:'🥚',cost:60,price:380,pop:68},
+    {name:'牛すじ煮込み',emoji:'🥘',cost:280,price:750,pop:75},
+    {name:'たこわさび',emoji:'🐙',cost:90,price:380,pop:58},
+    {name:'焼きおにぎり',emoji:'🍙',cost:50,price:300,pop:62},
+  ];
+  const available=names.filter(n=>!G.menu.find(m=>m.name===n.name));
+  if(!available.length){toast('開発できるメニューがありません');return}
+  const picked=available[Math.floor(Math.random()*available.length)];
+  G.menu.push({id:G.nextMenuId++,...picked,popularity:picked.pop});
+  addLog(`🔬 新メニュー「${picked.name}」を開発！`);toast(`新メニュー: ${picked.emoji}${picked.name}`);updateAll();
+};
+
+// Staff actions
+$('btnHire').onclick=()=>{
+  if(G.cash<30000){toast('資金が足りません');return}
+  G.cash-=30000;
+  const names=[
+    {name:'ケンジ',emoji:'👦',role:'新人',skill:25,salary:95000},
+    {name:'アヤカ',emoji:'👧',role:'ホール',skill:40,salary:110000},
+    {name:'リュウ',emoji:'🧑',role:'キッチン補助',skill:35,salary:105000},
+    {name:'サチコ',emoji:'👩',role:'経理兼任',skill:50,salary:120000},
+  ];
+  const p=names[Math.floor(Math.random()*names.length)];
+  G.staff.push({id:G.nextStaffId++,...p,morale:80,fatigue:0});
+  addLog(`👤 ${p.name}(${p.role})を採用！`);toast(`${p.emoji}${p.name}が入店！`);updateAll();
+};
+$('btnParty').onclick=()=>{
+  if(G.cash<20000){toast('資金が足りません');return}
+  G.cash-=20000;G.staff.forEach(s=>{s.morale=Math.min(100,s.morale+15);s.fatigue=Math.max(0,s.fatigue-10)});
+  addLog('🎉 懇親会を開催！士気UP');toast('みんな楽しんでる！');updateAll();
+};
+$('btnTrain').onclick=()=>{
+  if(G.cash<15000){toast('資金が足りません');return}
+  G.cash-=15000;G.staff.forEach(s=>s.skill=Math.min(100,s.skill+5));G.dataUsage+=3;
+  addLog('📚 スタッフ研修を実施');toast('スキルアップ！');updateAll();
+};
+
+// SNS Post
+$('btnPost').onclick=()=>{
+  const text=$('postText').value.trim();
+  const boost=text.length>10?Math.floor(3+Math.random()*5):Math.floor(1+Math.random()*3);
+  G.snsFollower+=boost*10;G.popularity=Math.min(100,G.popularity+boost);
+  addLog(`📱 SNS投稿: +${boost*10}フォロワー`);toast('投稿しました！');$('postText').value='';updateAll();
+};
+
+// Footer buttons
+$('fSave').onclick=()=>{try{localStorage.setItem('izakaya-save',JSON.stringify(G));toast('💾 セーブ完了！')}catch(e){toast('保存に失敗…')}};
+$('fLoad').onclick=()=>{try{const d=localStorage.getItem('izakaya-save');if(d){Object.assign(G,JSON.parse(d));updateAll();toast('📂 ロード完了！')}else toast('セーブデータがありません')}catch(e){toast('読込に失敗…')}};
+$('fReset').onclick=()=>{
+  const ov=document.createElement('div');ov.className='modal-overlay';
+  ov.innerHTML=`<div class="modal-box"><h2>🔄 最初からやり直す？</h2><p>セーブデータは残ります。新しいゲームを始めますか？</p>
+  <div style="display:flex;gap:8px"><button class="btn-p btn-sm" style="flex:1" id="resetOk">はい</button>
+  <button class="btn-o btn-sm" style="flex:1" onclick="this.closest('.modal-overlay').remove()">いいえ</button></div></div>`;
+  $('modalC').appendChild(ov);
+  ov.querySelector('#resetOk').onclick=()=>{ov.remove();resetGame()};
+};
+$('fCalc').onclick=()=>{
+  const ov=document.createElement('div');ov.className='modal-overlay';
+  ov.innerHTML=`<div class="modal-box"><h2>🧮 原価率計算機</h2>
+  <div style="margin:10px 0"><label style="font-size:.8rem;color:rgba(255,255,255,.6)">原価(円)</label>
+  <input type="number" id="calcCost" value="300" style="width:100%;padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,152,0,.3);border-radius:8px;color:var(--light);font-size:1rem;margin-top:4px"></div>
+  <div style="margin:10px 0"><label style="font-size:.8rem;color:rgba(255,255,255,.6)">売価(円)</label>
+  <input type="number" id="calcPrice" value="1000" style="width:100%;padding:8px;background:rgba(0,0,0,.3);border:1px solid rgba(255,152,0,.3);border-radius:8px;color:var(--light);font-size:1rem;margin-top:4px"></div>
+  <div style="text-align:center;margin:16px 0"><div style="font-size:.8rem;color:rgba(255,255,255,.5)">原価率</div>
+  <div id="calcResult" style="font-size:2rem;font-weight:900;color:var(--accent)">30%</div>
+  <div id="calcAdvice" style="font-size:.75rem;color:var(--success);margin-top:4px">適正範囲です</div></div>
+  <button class="btn-o btn-sm" style="width:100%" onclick="this.closest('.modal-overlay').remove()">閉じる</button></div>`;
+  $('modalC').appendChild(ov);
+  const update=()=>{
+    const c=+ov.querySelector('#calcCost').value||0;
+    const p=+ov.querySelector('#calcPrice').value||1;
+    const r=Math.round(c/p*100);
+    ov.querySelector('#calcResult').textContent=r+'%';
+    const adv=ov.querySelector('#calcAdvice');
+    if(r<=30){adv.textContent='✅ 適正範囲です';adv.style.color='var(--success)'}
+    else if(r<=40){adv.textContent='⚠️ やや高め。価格調整を検討';adv.style.color='var(--warning)'}
+    else{adv.textContent='🚨 危険！大幅な改善が必要';adv.style.color='var(--danger)'}
+  };
+  ov.querySelector('#calcCost').oninput=update;
+  ov.querySelector('#calcPrice').oninput=update;
+};
+$('fInfo').onclick=()=>{
+  const ov=document.createElement('div');ov.className='modal-overlay';
+  ov.innerHTML=`<div class="modal-box"><h2>❓ 遊び方</h2>
+  <p>あなたはダメ社長・山田太郎。居酒屋「向日葵」を立て直せ！</p>
+  <p><b>基本操作:</b><br>
+  「1週間進める」で時間が進みます。メニュー価格の調整、スタッフ管理、集客戦略を駆使して黒字経営を目指しましょう。</p>
+  <p><b>重要指標:</b><br>
+  ・原価率: 30%以下が理想<br>
+  ・FL比率: 60%以下が健全<br>
+  ・人気度: 高いほど客が来る<br>
+  ・士気: 低いとサービス低下</p>
+  <p><b>自動運転:</b><br>
+  ONにすると自動で経営判断。戦略と速度を選べます。</p>
+  <p><b>エンディング:</b><br>
+  経営状況に応じて複数のエンディングに分岐！</p>
+  <button class="btn-o btn-sm" style="width:100%;margin-top:8px" onclick="this.closest('.modal-overlay').remove()">閉じる</button></div>`;
+  $('modalC').appendChild(ov);
+};
+
+function resetGame(){
+  stopAuto();
+  Object.assign(G,{
+    year:1,month:4,week:1,totalWeeks:0,cash:500000,loan:0,
+    monthlySales:0,monthlyExpenses:0,monthlyProfit:0,profitRate:0,flRatio:65,
+    popularity:30,repeatRate:20,customerAvg:2800,turnoverRate:1.2,seats:30,dailyCustomers:45,
+    snsFollower:1234,snsEngagement:3.2,adLevel:'none',reputation:65,dataUsage:10,
+    presidentLevel:1,presidentExp:0,awakened:false,presidentStage:0,
+    avgMorale:62,salesHistory:[],autoMode:false,autoStrategy:'balanced',autoSpeed:'normal',
+    eventsDone:[],logs:[],
+    menu:[
+      {id:1,name:'枝豆',emoji:'🫛',cost:80,price:300,popularity:70},
+      {id:2,name:'刺身盛り',emoji:'🐟',cost:800,price:1800,popularity:85},
+      {id:3,name:'唐揚げ',emoji:'🍗',cost:120,price:450,popularity:75},
+      {id:4,name:'ポテトフライ',emoji:'🍟',cost:60,price:350,popularity:60},
+      {id:5,name:'焼き鳥',emoji:'🍢',cost:100,price:400,popularity:72},
+      {id:6,name:'生ビール',emoji:'🍺',cost:150,price:500,popularity:90},
+      {id:7,name:'ハイボール',emoji:'🥃',cost:80,price:450,popularity:80},
+      {id:8,name:'冷奴',emoji:'🧊',cost:40,price:280,popularity:55},
+    ],
+    staff:[
+      {id:1,name:'源さん',emoji:'👨‍🍳',role:'板前',morale:60,skill:80,fatigue:20,salary:250000},
+      {id:2,name:'みゆき',emoji:'👩‍🍳',role:'バイトリーダー',morale:70,skill:65,fatigue:30,salary:130000},
+      {id:3,name:'タケシ',emoji:'🧑‍🍳',role:'新人',morale:90,skill:30,fatigue:10,salary:100000},
+    ],
+    nextStaffId:4,nextMenuId:9,
+  });
+  addLog('🎮 新しいゲームを開始！');updateAll();toast('新しいゲームを開始！');
+}
+
+// ---- TAB SWITCHING ----
+document.querySelectorAll('.tab-b').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab-b').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pane-'+btn.dataset.tab).classList.add('active');
+  };
+});
+
+// ---- BUTTON BINDINGS ----
+$('btnNext').onclick=()=>advanceWeek();
+$('btnAuto').onclick=toggleAuto;
+$('logClear').onclick=()=>{G.logs=[];updateAll()};
+
+// Strategy & speed buttons
+document.querySelectorAll('.strat-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.strat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');G.autoStrategy=btn.dataset.st;
+    if(G.autoMode){stopAuto();startAuto()}
+  };
+});
+document.querySelectorAll('.speed-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');G.autoSpeed=btn.dataset.sp;
+    if(G.autoMode){stopAuto();startAuto()}
+  };
+});
+
+// ---- SPLASH & INIT ----
+(function init(){
+  const fill=$('loadFill');
+  let p=0;
+  const iv=setInterval(()=>{
+    p+=Math.random()*25+10;if(p>100)p=100;
+    fill.style.width=p+'%';
+    if(p>=100){
+      clearInterval(iv);
+      setTimeout(()=>{
+        $('splash').classList.add('hide');
+        $('app').classList.add('show');
+        // Try load save
+        try{const d=localStorage.getItem('izakaya-save');if(d){Object.assign(G,JSON.parse(d));toast('前回のデータをロードしました')}}catch(e){}
+        addLog('🍶 居酒屋ドリフター、開店！');
+        updateAll();
+      },400);
+    }
+  },200);
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </body>
 </html>
